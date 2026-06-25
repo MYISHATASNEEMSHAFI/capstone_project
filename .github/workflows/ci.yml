@@ -10,50 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ---------------------------
       # Checkout code
-      # ---------------------------
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # ---------------------------
-      # Java setup (backend)
-      # ---------------------------
+      # Java setup
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # ---------------------------
       # Build backend jar
-      # ---------------------------
       - name: Build Backend Jar
         working-directory: ./backend
         run: mvn clean package -DskipTests
 
-      # ---------------------------
-      # Setup Node (frontend build)
-      # ---------------------------
+      # Node setup
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # ---------------------------
-      # Build frontend (IMPORTANT for VITE env)
-      # ---------------------------
+      # Install frontend dependencies
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm install
 
+      # Build frontend
       - name: Build Frontend
         working-directory: ./frontend
         run: npm run build
 
-      # ---------------------------
       # AWS credentials
-      # ---------------------------
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -61,66 +50,40 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ---------------------------
       # Login to ECR
-      # ---------------------------
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # ---------------------------
-      # Backend Docker build & push
-      # ---------------------------
+      # Build backend image
       - name: Build Backend Docker Image
         run: |
           docker build -t capstone-backend ./backend
 
-      - name: Tag Backend Image
+      # Tag backend image
+      - name: Tag Backend Docker Image
         run: |
           docker tag capstone-backend:latest \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
 
-      - name: Push Backend Image
+      # Push backend image
+      - name: Push Backend Docker Image
         run: |
           docker push \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
 
-      # ---------------------------
-      # Frontend Docker build & push
-      # ---------------------------
+      # Build frontend image
       - name: Build Frontend Docker Image
         run: |
           docker build -t capstone-frontend ./frontend
 
-      - name: Tag Frontend Image
+      # Tag frontend image
+      - name: Tag Frontend Docker Image
         run: |
           docker tag capstone-frontend:latest \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
 
-      - name: Push Frontend Image
+      # Push frontend image
+      - name: Push Frontend Docker Image
         run: |
           docker push \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
-
-      # ---------------------------
-      # Deploy to Kubernetes (CRITICAL FIX)
-      # ---------------------------
-      - name: Update Backend Deployment
-        run: |
-          kubectl set image deployment/backend \
-          backend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest \
-          -n capstone
-
-      - name: Update Frontend Deployment
-        run: |
-          kubectl set image deployment/frontend \
-          frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest \
-          -n capstone
-
-      # ---------------------------
-      # Restart (ensures fresh rollout)
-      # ---------------------------
-      - name: Restart Deployments
-        run: |
-          kubectl rollout restart deployment/backend -n capstone
-          kubectl rollout restart deployment/frontend -n capstone
