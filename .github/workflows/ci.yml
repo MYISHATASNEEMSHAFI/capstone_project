@@ -3,57 +3,67 @@ name: Build and Push Docker Images
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build-and-push:
-
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      # Java Setup
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+      # Build Spring Boot Jar
+      - name: Build Backend Jar
+        working-directory: ./backend
+        run: mvn clean package -DskipTests
 
-    # Backend Image
+      # AWS Login
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Build Backend Image
-      run: |
-        docker build -t capstone-backend ./backend
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Tag Backend Image
-      run: |
-        docker tag capstone-backend:latest \
-        ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
+      # Backend Image
+      - name: Build Backend Docker Image
+        run: |
+          docker build -t capstone-backend ./backend
 
-    - name: Push Backend Image
-      run: |
-        docker push \
-        ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
+      - name: Tag Backend Image
+        run: |
+          docker tag capstone-backend:latest \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
 
-    # Frontend Image
+      - name: Push Backend Image
+        run: |
+          docker push \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
 
-    - name: Build Frontend Image
-      run: |
-        docker build -t capstone-frontend ./frontend
+      # Frontend Image
+      - name: Build Frontend Docker Image
+        run: |
+          docker build -t capstone-frontend ./frontend
 
-    - name: Tag Frontend Image
-      run: |
-        docker tag capstone-frontend:latest \
-        ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
+      - name: Tag Frontend Image
+        run: |
+          docker tag capstone-frontend:latest \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
 
-    - name: Push Frontend Image
-      run: |
-        docker push \
-        ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
+      - name: Push Frontend Image
+        run: |
+          docker push \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
