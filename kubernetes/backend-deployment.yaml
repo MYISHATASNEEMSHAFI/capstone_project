@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: backend
+  namespace: capstone
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: backend
+
+  template:
+
+    metadata:
+      labels:
+        app: backend
+
+    spec:
+
+      containers:
+
+      - name: backend
+
+        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend:v1
+
+        imagePullPolicy: Always
+
+        ports:
+
+        - containerPort: 8080
+
+        env:
+
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://capstone-mysql.cd2o0g0cs0pf.us-east-2.rds.amazonaws.com:3306/notes_db
+
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: username
+
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
