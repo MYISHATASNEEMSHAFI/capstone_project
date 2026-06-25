@@ -19,8 +19,12 @@ module "eks" {
       instance_types = ["t3.medium"]
 
       min_size     = 2
-      max_size     = 3
-      desired_size = 2
+      max_size     = 6
+      desired_size = 5
+
+       iam_role_additional_policies = {
+        ebs_csi = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
 
       subnet_ids = [
         aws_subnet.private_subnet_1.id,
