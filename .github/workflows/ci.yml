@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -16,6 +19,9 @@ jobs:
       # Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
         
       # Setup Java
       - name: Setup Java 17
