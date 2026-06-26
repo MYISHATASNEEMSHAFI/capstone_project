@@ -3,7 +3,7 @@ kind: Deployment
 
 metadata:
   name: frontend
-  namespace: capstone
+  namespace: production
 
 spec:
   replicas: 2
