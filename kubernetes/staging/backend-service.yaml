@@ -3,7 +3,7 @@ kind: Service
 
 metadata:
   name: backend-service
-  namespace: capstone
+  namespace: staging
 
 spec:
 
