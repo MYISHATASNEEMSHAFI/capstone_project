@@ -20,7 +20,7 @@ function NoteForm({ onSave }) {
     return (
         <div className="card p-4 mb-4">
 
-            <h3>Add Note</h3>
+            <h3>Add Your Note</h3>
 
             <form onSubmit={handleSubmit}>
 
