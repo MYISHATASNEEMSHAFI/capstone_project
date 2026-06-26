@@ -55,7 +55,7 @@ function App() {
 
             <h1 className="text-center mb-4">
 
-                Notes Management 
+                Notes Management System
 
             </h1>
 
