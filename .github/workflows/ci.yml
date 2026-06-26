@@ -1,4 +1,4 @@
-name: Build and Push Docker Images
+name: Build, Push and Update Manifests
 
 on:
   push:
@@ -9,40 +9,45 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+
     steps:
       # Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_TOKEN }}
 
-      # Java setup
+      # Setup Java
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # Build backend jar
+      # Build Backend
       - name: Build Backend Jar
-        working-directory: ./backend
+        working-directory: backend
         run: mvn clean package -DskipTests
 
-      # Node setup
+      # Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Install frontend dependencies
+      # Install frontend packages
       - name: Install Frontend Dependencies
-        working-directory: ./frontend
+        working-directory: frontend
         run: npm install
 
       # Build frontend
       - name: Build Frontend
-        working-directory: ./frontend
+        working-directory: frontend
         run: npm run build
 
-      # AWS credentials
+      # Configure AWS
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -54,36 +59,60 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Build backend image
+      ##################################################
+      # Backend Image
+      ##################################################
+
       - name: Build Backend Docker Image
         run: |
-          docker build -t capstone-backend ./backend
+          docker build \
+          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG} \
+          ./backend
 
-      # Tag backend image
-      - name: Tag Backend Docker Image
-        run: |
-          docker tag capstone-backend:latest \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
-
-      # Push backend image
       - name: Push Backend Docker Image
         run: |
           docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:latest
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}
 
-      # Build frontend image
+      ##################################################
+      # Frontend Image
+      ##################################################
+
       - name: Build Frontend Docker Image
         run: |
-          docker build -t capstone-frontend ./frontend
+          docker build \
+          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG} \
+          ./frontend
 
-      # Tag frontend image
-      - name: Tag Frontend Docker Image
-        run: |
-          docker tag capstone-frontend:latest \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
-
-      # Push frontend image
       - name: Push Frontend Docker Image
         run: |
           docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:latest
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
+
+      ##################################################
+      # Update Staging Manifests
+      ##################################################
+
+      - name: Update Staging Frontend Image
+        run: |
+          sed -i "s|capstone-frontend:.*|capstone-frontend:${IMAGE_TAG}|g" kubernetes/staging/frontend-deployment.yaml
+
+      - name: Update Staging Backend Image
+        run: |
+          sed -i "s|capstone-backend:.*|capstone-backend:${IMAGE_TAG}|g" kubernetes/staging/backend-deployment.yaml
+
+      ##################################################
+      # Commit Updated Manifests
+      ##################################################
+
+      - name: Commit Manifest Changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git add kubernetes/staging/frontend-deployment.yaml
+          git add kubernetes/staging/backend-deployment.yaml
+
+          git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes"
+
+          git push
