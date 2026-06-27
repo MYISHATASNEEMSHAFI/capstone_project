@@ -24,7 +24,7 @@ spec:
 
       - name: backend
 
-        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend:138a975544b6648b89a4bea6052bf9f6ac0f33f1
+        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend:c9274b9fee920edc629bba86d5c4434285da9f52
 
         imagePullPolicy: Always
 
