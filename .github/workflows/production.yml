@@ -1,0 +1,64 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      ###################################################
+      # Read image tags from STAGING manifests
+      ###################################################
+
+      - name: Read Backend Image
+        id: backend
+        run: |
+          IMAGE=$(grep "image:" kubernetes/staging/backend-deployment.yaml | awk '{print $2}')
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Read Frontend Image
+        id: frontend
+        run: |
+          IMAGE=$(grep "image:" kubernetes/staging/frontend-deployment.yaml | awk '{print $2}')
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
+      ###################################################
+      # Update Production manifests
+      ###################################################
+
+      - name: Update Backend Manifest
+        run: |
+          sed -i "s|image:.*|image: ${{ steps.backend.outputs.image }}|g" kubernetes/production/backend-deployment.yaml
+
+      - name: Update Frontend Manifest
+        run: |
+          sed -i "s|image:.*|image: ${{ steps.frontend.outputs.image }}|g" kubernetes/production/frontend-deployment.yaml
+
+      ###################################################
+      # Commit and Push
+      ###################################################
+
+      - name: Commit Changes
+        run: |
+          git add kubernetes/production/backend-deployment.yaml
+          git add kubernetes/production/frontend-deployment.yaml
+
+          git commit -m "Promote images to production" || echo "No changes"
+
+          git push
