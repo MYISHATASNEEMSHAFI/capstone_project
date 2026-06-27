@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: Rollout
 
 metadata:
   name: frontend
@@ -11,6 +11,12 @@ spec:
   selector:
     matchLabels:
       app: frontend
+
+  strategy:
+    blueGreen:
+      activeService: frontend-active
+      previewService: frontend-preview
+      autoPromotionEnabled: false    
 
   template:
     metadata:
