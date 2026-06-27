@@ -20,8 +20,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-        token: ${{ github.token }}
-        fetch-depth: '0'
+          token: ${{ github.token }}
+          fetch-depth: 0
         
       # Setup Java
       - name: Setup Java 17
