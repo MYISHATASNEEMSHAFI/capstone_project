@@ -17,48 +17,44 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure Git
+      ########################################################
+      # Read image tags from staging manifests
+      ########################################################
+
+      - name: Read Backend Tag
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          BACKEND_IMAGE=$(grep "image:" kubernetes/staging/backend-deployment.yaml | awk '{print $2}')
+          echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
 
-      ###################################################
-      # Read image tags from STAGING manifests
-      ###################################################
-
-      - name: Read Backend Image
-        id: backend
+      - name: Read Frontend Tag
         run: |
-          IMAGE=$(grep "image:" kubernetes/staging/backend-deployment.yaml | awk '{print $2}')
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          FRONTEND_IMAGE=$(grep "image:" kubernetes/staging/frontend-deployment.yaml | awk '{print $2}')
+          echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
 
-      - name: Read Frontend Image
-        id: frontend
-        run: |
-          IMAGE=$(grep "image:" kubernetes/staging/frontend-deployment.yaml | awk '{print $2}')
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
-
-      ###################################################
-      # Update Production manifests
-      ###################################################
+      ########################################################
+      # Update production manifests
+      ########################################################
 
       - name: Update Backend Manifest
         run: |
-          sed -i "s|image:.*|image: ${{ steps.backend.outputs.image }}|g" kubernetes/production/backend-deployment.yaml
+          sed -i "s|image:.*|image: ${BACKEND_IMAGE}|g" kubernetes/production/backend-deployment.yaml
 
       - name: Update Frontend Manifest
         run: |
-          sed -i "s|image:.*|image: ${{ steps.frontend.outputs.image }}|g" kubernetes/production/frontend-deployment.yaml
+          sed -i "s|image:.*|image: ${FRONTEND_IMAGE}|g" kubernetes/production/frontend-deployment.yaml
 
-      ###################################################
-      # Commit and Push
-      ###################################################
+      ########################################################
+      # Commit changes
+      ########################################################
 
-      - name: Commit Changes
+      - name: Commit and Push
         run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
           git add kubernetes/production/backend-deployment.yaml
           git add kubernetes/production/frontend-deployment.yaml
 
-          git commit -m "Promote images to production" || echo "No changes"
+          git commit -m "Promote staging images to production" || echo "No changes"
 
           git push
