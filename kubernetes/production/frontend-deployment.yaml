@@ -21,7 +21,7 @@ spec:
       containers:
       - name: frontend
 
-        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:cba1b0bc5f81b7a883318bf2d496b55d00e5a08f
+        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:5a096b767e218a1cfcd4237b6ac0ed9ce0cdcf13
 
         imagePullPolicy: Always
 
