@@ -4,6 +4,10 @@ kind: Deployment
 metadata:
   name: backend
   namespace: staging
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: backend=622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend
+    argocd-image-updater.argoproj.io/backend.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/write-back-method: git
 
 spec:
   replicas: 2
@@ -13,27 +17,18 @@ spec:
       app: backend
 
   template:
-
     metadata:
       labels:
         app: backend
 
     spec:
-
       containers:
-
       - name: backend
-
         image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend:6c9608ab4342622e3bb8df2605025703142cd304
-
         imagePullPolicy: Always
-
         ports:
-
         - containerPort: 8080
-
         env:
-
         - name: SPRING_DATASOURCE_URL
           value: jdbc:mysql://capstone-mysql.cd2o0g0cs0pf.us-east-2.rds.amazonaws.com:3306/notes_db
 
@@ -48,8 +43,3 @@ spec:
             secretKeyRef:
               name: mysql-secret
               key: password
-
-  annotations:
-  argocd-image-updater.argoproj.io/image-list: backend=622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend
-  argocd-image-updater.argoproj.io/backend.update-strategy: newest-build
-  argocd-image-updater.argoproj.io/write-back-method: git

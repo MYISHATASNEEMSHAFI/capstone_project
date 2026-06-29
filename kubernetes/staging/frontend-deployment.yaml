@@ -4,6 +4,10 @@ kind: Rollout
 metadata:
   name: frontend
   namespace: staging
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: frontend=622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend
+    argocd-image-updater.argoproj.io/frontend.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/write-back-method: git
 
 spec:
   replicas: 2
@@ -16,7 +20,7 @@ spec:
     blueGreen:
       activeService: frontend-active
       previewService: frontend-preview
-      autoPromotionEnabled: true   
+      autoPromotionEnabled: true
 
   template:
     metadata:
@@ -25,14 +29,8 @@ spec:
 
     spec:
       containers:
-       - name: frontend
-         image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:6c9608ab4342622e3bb8df2605025703142cd304
-         imagePullPolicy: Always
-         ports:
-          - containerPort: 80
-
-
-  annotations:
-  argocd-image-updater.argoproj.io/image-list: frontend=622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend
-  argocd-image-updater.argoproj.io/frontend.update-strategy: newest-build
-  argocd-image-updater.argoproj.io/write-back-method: git
+      - name: frontend
+        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:6c9608ab4342622e3bb8df2605025703142cd304
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
