@@ -104,43 +104,46 @@ jobs:
         docker build \
           -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG \
           ./frontend
+    
 
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget
+        wget -qO- https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+   - name: Check Trivy
+      run: trivy --version
+   
+   
     ##################################################
     # Scan Backend Image
     ##################################################
 
-    - name: Scan Backend Image
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${{ github.sha }}
-        format: table
-        exit-code: '1'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'HIGH,CRITICAL'
-
+  - name: Scan Backend Image
+    run: |
+        trivy image \
+          --severity HIGH,CRITICAL \
+          --ignore-unfixed \
+          --exit-code 1 \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}
    
 
-    ##################################################
-    # Scan Frontend Image
-    ##################################################
+  
 
 
-    - name: Scan Frontend Image
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${{ github.sha }}
-        format: table
-        exit-code: '1'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'HIGH,CRITICAL'
+ - name: Scan Frontend Image
+    run: |
+      trivy image \
+        --severity HIGH,CRITICAL \
+        --ignore-unfixed \
+        --exit-code 1 \
+        ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
 
     ##################################################
     # Push Backend Image
     ##################################################
 
-    - name: Push Backend Image
+ - name: Push Backend Image
       run: |
         docker push \
         $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG
@@ -149,7 +152,7 @@ jobs:
     # Push Frontend Image
     ##################################################
 
-    - name: Push Frontend Image
+ - name: Push Frontend Image
       run: |
         docker push \
         $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG
@@ -158,7 +161,7 @@ jobs:
     # Install Kustomize
     ##################################################
 
-    - name: Install Kustomize
+- name: Install Kustomize
       run: |
         curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
         sudo mv kustomize /usr/local/bin/
@@ -167,7 +170,7 @@ jobs:
     # Update Manifest
     ##################################################
 
-    - name: Update Kustomization
+- name: Update Kustomization
       run: |
         cd kubernetes/staging
 
@@ -179,7 +182,7 @@ jobs:
     # Commit Manifest
     ##################################################
 
-    - name: Commit Manifest Changes
+- name: Commit Manifest Changes
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
