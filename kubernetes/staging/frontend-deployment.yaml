@@ -23,10 +23,10 @@ spec:
       labels:
         app: frontend
 
-  spec:
-  containers:
-    - name: frontend
-      image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:92a870cc76bba3c61d1aac40839c7a63415311ad
-      imagePullPolicy: Always
-      ports:
-        - containerPort: 80
+    spec:
+      containers:
+       - name: frontend
+         image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:92a870cc76bba3c61d1aac40839c7a63415311ad
+         imagePullPolicy: Always
+         ports:
+          - containerPort: 80
