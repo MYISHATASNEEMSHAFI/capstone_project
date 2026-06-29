@@ -4,19 +4,19 @@ kind: Kustomization
 namespace: staging
 
 resources:
-  - namespace.yaml
-  - secret.yaml
-  - backend-deployment.yaml
-  - backend-service.yaml
-  - frontend-deployment.yaml
-  - frontend-active-service.yaml
-  - frontend-service.yaml
-  - ingress.yaml
+- namespace.yaml
+- secret.yaml
+- backend-deployment.yaml
+- backend-service.yaml
+- frontend-deployment.yaml
+- frontend-active-service.yaml
+- frontend-service.yaml
+- ingress.yaml
 
 images:
 - name: capstone-backend
   newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend
-  newTag: 246918225afd9ecb4283ce1828be133e5787d362
+  newTag: c7dbab33c8712e0edc443aef71d953eb76328d5e
 - name: capstone-frontend
   newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend
-  newTag: 246918225afd9ecb4283ce1828be133e5787d362
+  newTag: c7dbab33c8712e0edc443aef71d953eb76328d5e
