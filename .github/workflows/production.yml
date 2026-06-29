@@ -57,4 +57,5 @@ jobs:
 
           git commit -m "Promote staging images to production" || echo "No changes"
 
-          git push
+          git pull --rebase origin master
+          git push origin HEAD:master
