@@ -124,7 +124,7 @@ jobs:
 
             ##################################################
       - name: Scan Frontend Image
-         run: |
+        run: |
           trivy image \
             --severity HIGH,CRITICAL \
             --exit-code 1 \
