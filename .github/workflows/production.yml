@@ -21,16 +21,27 @@ jobs:
       # Read image tags from staging manifests
       ########################################################
 
-      - name: Read Backend Tag
+      - name: Read Backend Image
         run: |
-          BACKEND_IMAGE=$(grep "image:" kubernetes/staging/backend-deployment.yaml | awk '{print $2}')
-          echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
+              BACKEND_IMAGE=$(awk '/image:/{print $2; exit}' kubernetes/staging/backend-deployment.yaml)
 
-      - name: Read Frontend Tag
+              if [ -z "$BACKEND_IMAGE" ]; then
+                echo "backend image not found!"
+                exit 1
+              fi
+              echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
+     
+      - name: Read Frontend Image
         run: |
-          FRONTEND_IMAGE=$(grep "image:" kubernetes/staging/frontend-deployment.yaml | awk '{print $2}')
-          echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
+            FRONTEND_IMAGE=$(awk '/image:/{print $2; exit}' kubernetes/staging/frontend-deployment.yaml)
 
+            if [ -z "$FRONTEND_IMAGE" ]; then
+              echo "Frontend image not found!"
+              exit 1
+            fi
+
+            echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
+   
       ########################################################
       # Update production manifests
       ########################################################
