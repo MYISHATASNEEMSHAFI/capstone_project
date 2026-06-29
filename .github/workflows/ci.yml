@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   build-and-push:
+
     runs-on: ubuntu-latest
 
     env:
@@ -19,47 +20,47 @@ jobs:
 
     steps:
 
-    ##################################################
-    # Checkout
-    ##################################################
+    #################################################
+    # Checkout Repository
+    #################################################
 
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    ##################################################
-    # Java
-    ##################################################
+    #################################################
+    # Setup Java
+    #################################################
 
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: '17'
+        java-version: "17"
 
-    ##################################################
+    #################################################
     # Build Backend
-    ##################################################
+    #################################################
 
     - name: Build Backend
       working-directory: backend
       run: mvn clean package -DskipTests
 
-    ##################################################
-    # Node
-    ##################################################
+    #################################################
+    # Setup Node
+    #################################################
 
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
         node-version: 22
 
-    ##################################################
+    #################################################
     # Build Frontend
-    ##################################################
+    #################################################
 
-    - name: Install Frontend Dependencies
+    - name: Install Frontend Packages
       working-directory: frontend
       run: npm install
 
@@ -67,130 +68,138 @@ jobs:
       working-directory: frontend
       run: npm run build
 
-    ##################################################
-    # AWS Login
-    ##################################################
+    #################################################
+    # Configure AWS
+    #################################################
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ env.AWS_REGION }}
 
-    ##################################################
-    # Login ECR
-    ##################################################
+    #################################################
+    # Login to Amazon ECR
+    #################################################
 
     - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v2
 
-    ##################################################
+    #################################################
     # Build Backend Image
-    ##################################################
+    #################################################
 
     - name: Build Backend Docker Image
       run: |
         docker build \
-          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG \
-          ./backend
+        -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG \
+        ./backend
 
-    ##################################################
+    #################################################
     # Build Frontend Image
-    ##################################################
+    #################################################
 
     - name: Build Frontend Docker Image
       run: |
         docker build \
-          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG \
-          ./frontend
-    
+        -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG \
+        ./frontend
+
+    #################################################
+    # Install Trivy
+    #################################################
 
     - name: Install Trivy
       run: |
         sudo apt-get update
         sudo apt-get install -y wget
-        wget -qO- https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-    
-    - name: Check Trivy
+        wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
+        chmod +x install.sh
+        sudo ./install.sh -b /usr/local/bin
+
+    - name: Verify Trivy
       run: trivy --version
-   
-   
-    ##################################################
+
+
+          #################################################
     # Scan Backend Image
-    ##################################################
+    #################################################
 
     - name: Scan Backend Image
-     run: |
+      run: |
         trivy image \
           --severity HIGH,CRITICAL \
           --ignore-unfixed \
           --exit-code 1 \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}
-   
+          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG
+
+    #################################################
+    # Scan Frontend Image
+    #################################################
 
     - name: Scan Frontend Image
       run: |
-          trivy image \
-            --severity HIGH,CRITICAL \
-            --ignore-unfixed \
-            --exit-code 1 \
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
+        trivy image \
+          --severity HIGH,CRITICAL \
+          --ignore-unfixed \
+          --exit-code 1 \
+          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG
 
-    ##################################################
+    #################################################
     # Push Backend Image
-    ##################################################
+    #################################################
 
     - name: Push Backend Image
       run: |
         docker push \
-        $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG
+          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG
 
-    ##################################################
+    #################################################
     # Push Frontend Image
-    ##################################################
+    #################################################
 
     - name: Push Frontend Image
       run: |
         docker push \
-        $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG
+          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG
 
-    ##################################################
+    #################################################
     # Install Kustomize
-    ##################################################
+    #################################################
 
     - name: Install Kustomize
       run: |
         curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
         sudo mv kustomize /usr/local/bin/
 
-    ##################################################
-    # Update Manifest
-    ##################################################
+    #################################################
+    # Update Kustomization Images
+    #################################################
 
     - name: Update Kustomization
       run: |
         cd kubernetes/staging
 
-        kustomize edit set image capstone-backend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG
+        kustomize edit set image \
+        capstone-backend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG
 
-        kustomize edit set image capstone-frontend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG
+        kustomize edit set image \
+        capstone-frontend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG
 
-    ##################################################
-    # Commit Manifest
-    ##################################################
+    #################################################
+    # Commit Manifest Changes
+    #################################################
 
-    - name: Commit Manifest Changes
+    - name: Commit Updated Manifest
       run: |
-        git config user.name "github-actions"
-        git config user.email "github-actions@github.com"
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
 
         git add kubernetes/staging/kustomization.yaml
 
-        if git diff --cached --quiet; then
-          echo "No manifest changes"
-          exit 0
-        fi
+        git diff --cached --quiet && echo "Nothing to commit" && exit 0
 
-        git commit -m "Update images $IMAGE_TAG"
+        git commit -m "Update staging images to $IMAGE_TAG"
+
         git push origin master
