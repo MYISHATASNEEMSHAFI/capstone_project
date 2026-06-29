@@ -16,7 +16,7 @@ resources:
 images:
 - name: capstone-backend
   newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend
-  newTag: 2a5f034b629aa750309e3be70becc78002e56424
+  newTag: ba9d7dd49d903e0e1f544e94709ae2a6f9b3f813
 - name: capstone-frontend
   newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend
-  newTag: 2a5f034b629aa750309e3be70becc78002e56424
+  newTag: ba9d7dd49d903e0e1f544e94709ae2a6f9b3f813
