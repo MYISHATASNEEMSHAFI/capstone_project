@@ -121,24 +121,31 @@ jobs:
     ##################################################
 
     - name: Scan Backend Image
-      run: |
-        trivy image \
-        --severity HIGH,CRITICAL \
-        --exit-code 1 \
-        --ignore-unfixed \
-        $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-backend:$IMAGE_TAG
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${{ github.sha }}
+        format: table
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'HIGH,CRITICAL'
+
+   
 
     ##################################################
     # Scan Frontend Image
     ##################################################
 
+
     - name: Scan Frontend Image
-      run: |
-        trivy image \
-        --severity HIGH,CRITICAL \
-        --exit-code 1 \
-        --ignore-unfixed \
-        $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/capstone-frontend:$IMAGE_TAG
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${{ github.sha }}
+        format: table
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'HIGH,CRITICAL'
 
     ##################################################
     # Push Backend Image
