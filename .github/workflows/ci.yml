@@ -120,4 +120,5 @@ jobs:
 
           git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes"
 
-          git push
+          git pull --rebase origin master
+          git push origin HEAD:master
