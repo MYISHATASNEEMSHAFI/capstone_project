@@ -107,8 +107,7 @@ jobs:
             
       - name: Commit Manifest Changes
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+      
           git pull --rebase origin master
           git add kubernetes/staging/backend-deployment.yaml
           git add kubernetes/staging/frontend-deployment.yaml
