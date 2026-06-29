@@ -100,7 +100,7 @@ jobs:
       ##################################################
       # Scan Backend Image
       ##################################################
-    - name: Scan Backend Image
+      - name: Scan Backend Image
         run: |
           trivy image \
             --severity HIGH,CRITICAL \
