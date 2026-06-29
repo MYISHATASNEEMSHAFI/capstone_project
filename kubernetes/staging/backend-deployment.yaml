@@ -4,11 +4,7 @@ kind: Deployment
 metadata:
   name: backend
   namespace: staging
-  annotations:
-    argocd-image-updater.argoproj.io/image-list: backend=622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend
-    argocd-image-updater.argoproj.io/backend.update-strategy: newest-build
-    argocd-image-updater.argoproj.io/write-back-method: git
-
+  
 spec:
   replicas: 2
 

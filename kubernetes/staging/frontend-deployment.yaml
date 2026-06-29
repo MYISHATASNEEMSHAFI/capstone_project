@@ -4,11 +4,7 @@ kind: Rollout
 metadata:
   name: frontend
   namespace: staging
-  annotations:
-    argocd-image-updater.argoproj.io/image-list: frontend=622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend
-    argocd-image-updater.argoproj.io/frontend.update-strategy: newest-build
-    argocd-image-updater.argoproj.io/write-back-method: git
-
+  
 spec:
   replicas: 2
 
