@@ -24,7 +24,7 @@ spec:
 
       - name: backend
 
-        image: capstone-backend:latest
+        image: capstone-backend
 
         imagePullPolicy: Always
 
