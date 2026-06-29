@@ -93,32 +93,4 @@ jobs:
           docker push \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
 
-      ##################################################
-      # Update Staging Manifests
-      ##################################################
-
-      - name: Update Staging Frontend Image
-        run: |
-         sed -i -E "s|(image: .*capstone-frontend:).*|\1${IMAGE_TAG}|" \
-         kubernetes/staging/frontend-deployment.yaml
-
-      - name: Update Staging Backend Image
-        run: |
-          sed -i -E "s|(image: .*capstone-backend:).*|\1${IMAGE_TAG}|" \
-          kubernetes/staging/backend-deployment.yaml
-      ##################################################
-      # Commit Updated Manifests
-      ##################################################
-
-      - name: Commit Manifest Changes
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-          git add kubernetes/staging/frontend-deployment.yaml
-          git add kubernetes/staging/backend-deployment.yaml
-
-          git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes"
-
-          git pull --rebase origin master
-          git push origin HEAD:master
+     
