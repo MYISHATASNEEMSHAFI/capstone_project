@@ -129,9 +129,6 @@ jobs:
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}
    
 
-  
-
-
     - name: Scan Frontend Image
       run: |
           trivy image \
@@ -183,7 +180,7 @@ jobs:
     # Commit Manifest
     ##################################################
 
-  - name: Commit Manifest Changes
+    - name: Commit Manifest Changes
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
