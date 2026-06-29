@@ -16,42 +16,50 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
-      # Checkout code
+      ##################################################
+      # Checkout
+      ##################################################
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          token: ${{ github.token }}
           fetch-depth: 0
-        
+          persist-credentials: true
+
+      ##################################################
       # Setup Java
+      ##################################################
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
+      ##################################################
       # Build Backend
+      ##################################################
       - name: Build Backend Jar
         working-directory: backend
         run: mvn clean package -DskipTests
 
+      ##################################################
       # Setup Node
+      ##################################################
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # Install frontend packages
       - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm install
 
-      # Build frontend
       - name: Build Frontend
         working-directory: frontend
         run: npm run build
 
-      # Configure AWS
+      ##################################################
+      # AWS Configure
+      ##################################################
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -59,43 +67,44 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Login to ECR
+      ##################################################
+      # ECR Login
+      ##################################################
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
       ##################################################
-      # Backend Image
+      # Backend Docker Build & Push
       ##################################################
-
-      - name: Build Backend Docker Image
+      - name: Build Backend Image
         run: |
           docker build \
-          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG} \
-          ./backend
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG} \
+            ./backend
 
-      - name: Push Backend Docker Image
+      - name: Push Backend Image
         run: |
           docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}
 
       ##################################################
-      # Frontend Image
+      # Frontend Docker Build & Push
       ##################################################
-
-      - name: Build Frontend Docker Image
+      - name: Build Frontend Image
         run: |
           docker build \
-          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG} \
-          ./frontend
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG} \
+            ./frontend
 
-      - name: Push Frontend Docker Image
+      - name: Push Frontend Image
         run: |
           docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
-            ##################################################
-     
-     # Update image tags using kustomize
-      - name: Update Kubernetes Image Tags
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
+
+      ##################################################
+      # Update Kustomize (NO sed, NO conflicts)
+      ##################################################
+      - name: Update Kustomize Image Tags
         run: |
           cd kubernetes/staging
 
@@ -103,14 +112,18 @@ jobs:
 
           kustomize edit set image capstone-frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
 
-      - name: Commit Changes
+      ##################################################
+      # Commit Changes Safely (NO REBASE REQUIRED)
+      ##################################################
+      - name: Commit Manifest Changes
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
           git add kubernetes/staging/kustomization.yaml
 
-          git diff --cached --quiet && echo "No changes" && exit 0
+          git diff --cached --quiet && echo "No manifest changes" && exit 0
 
           git commit -m "staging: update images ${IMAGE_TAG}"
+
           git push origin master
