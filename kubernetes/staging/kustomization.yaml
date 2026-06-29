@@ -1,14 +1,17 @@
-resources:
-- backend-deployment.yaml
-- frontend-deployment.yaml
-
-
-images:
-- name: capstone-backend
-  newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend
-  newTag: e282f69fc88c4c9bdde54e766c23f9592b1ec56a
-- name: capstone-frontend
-  newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend
-  newTag: e282f69fc88c4c9bdde54e766c23f9592b1ec56a
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+resources:
+  - backend-deployment.yaml
+  - frontend-deployment.yaml
+  - backend-service.yaml
+  - frontend-service.yaml
+
+images:
+  - name: capstone-backend
+    newName: capstone-backend
+    newTag: latest
+
+  - name: capstone-frontend
+    newName: capstone-frontend
+    newTag: latest
