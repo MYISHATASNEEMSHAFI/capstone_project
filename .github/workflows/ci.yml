@@ -99,12 +99,13 @@ jobs:
 
       - name: Update Staging Frontend Image
         run: |
-          sed -i "s|capstone-frontend:.*|capstone-frontend:${IMAGE_TAG}|g" kubernetes/staging/frontend-deployment.yaml
+         sed -i -E "s|(image: .*capstone-frontend:).*|\1${IMAGE_TAG}|" \
+         kubernetes/staging/frontend-deployment.yaml
 
       - name: Update Staging Backend Image
         run: |
-          sed -i "s|capstone-backend:.*|capstone-backend:${IMAGE_TAG}|g" kubernetes/staging/backend-deployment.yaml
-
+          sed -i -E "s|(image: .*capstone-backend:).*|\1${IMAGE_TAG}|" \
+          kubernetes/staging/backend-deployment.yaml
       ##################################################
       # Commit Updated Manifests
       ##################################################

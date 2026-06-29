@@ -26,9 +26,12 @@ spec:
     spec:
       containers:
       - name: frontend
+       image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:5a096b767e218a1cfcd4237b6ac0ed9ce0cdcf13
+       imagePullPolicy: Always
 
-        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend:5a096b767e218a1cfcd4237b6ac0ed9ce0cdcf13
-
+      ports:
+        - containerPort: 80
+        
         imagePullPolicy: Always
 
         ports:
