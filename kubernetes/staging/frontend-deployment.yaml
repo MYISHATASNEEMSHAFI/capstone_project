@@ -14,8 +14,8 @@ spec:
 
   strategy:
     blueGreen:
-      activeService: frontend-active
-      previewService: frontend-preview
+      activeService: frontend-active-service
+      previewService: frontend-service
       autoPromotionEnabled: true
 
   template:
