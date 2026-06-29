@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend:6c9608ab4342622e3bb8df2605025703142cd304
+        image: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend:2128fc42bcdb4c44c78688ffc0599a5825dad74f
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
