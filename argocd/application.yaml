@@ -9,7 +9,6 @@ spec:
       prune: true
       selfHeal: true
 
-  spec:
   ignoreDifferences:
     - group: ""
       kind: Service
