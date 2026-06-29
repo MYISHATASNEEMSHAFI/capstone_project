@@ -106,17 +106,6 @@ jobs:
           ./frontend
 
     ##################################################
-    # Install Trivy
-    ##################################################
-
-    - name: Install Trivy
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget
-        wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.67.2_Linux-64bit.deb
-        sudo dpkg -i trivy_0.67.2_Linux-64bit.deb
-
-    ##################################################
     # Scan Backend Image
     ##################################################
 
