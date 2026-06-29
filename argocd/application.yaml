@@ -1,4 +1,9 @@
 spec:
+  source:
+    repoURL: https://github.com/MYISHATASNEEMSHAFI/capstone_project.git
+    targetRevision: master
+    path: kubernetes/staging
+    kustomize: {}
   syncPolicy:
     automated:
       prune: true

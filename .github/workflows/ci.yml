@@ -94,27 +94,23 @@ jobs:
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
             ##################################################
      
-      # Update Staging Manifests
-      ##################################################
-
-      - name: Update Backend Manifest
+     # Update image tags using kustomize
+      - name: Update Kubernetes Image Tags
         run: |
-          sed -i "s|image: .*capstone-backend:.*|image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}|g" kubernetes/staging/backend-deployment.yaml
-     
-      - name: Update Frontend Manifest
+          cd kubernetes/staging
+
+          kustomize edit set image capstone-backend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${IMAGE_TAG}
+
+          kustomize edit set image capstone-frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}
+
+      - name: Commit Changes
         run: |
-          sed -i "s|image: .*capstone-frontend:.*|image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-frontend:${IMAGE_TAG}|g" kubernetes/staging/frontend-deployment.yaml
-            
-      - name: Commit Manifest Changes
-        run: |
-            git config user.name "github-actions"
-            git config user.email "github-actions@github.com"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
 
-            git add kubernetes/staging/backend-deployment.yaml
-            git add kubernetes/staging/frontend-deployment.yaml
+          git add kubernetes/staging/kustomization.yaml
 
-            # Only commit if there are changes
-            git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git diff --cached --quiet && echo "No changes" && exit 0
 
-            git commit -m "staging: update images ${IMAGE_TAG}"
-            git push origin master
+          git commit -m "staging: update images ${IMAGE_TAG}"
+          git push origin master
