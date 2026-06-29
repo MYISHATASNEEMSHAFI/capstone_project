@@ -101,14 +101,14 @@ jobs:
       # Scan Backend Image
       ##################################################
       - name: Scan Backend Image
-      uses: aquasecurity/trivy-action@v0.36.0
-      with:
-        image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${{ github.sha }}
-        format: table
-        exit-code: '1'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'HIGH,CRITICAL'
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+            image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/capstone-backend:${{ github.sha }}
+            format: table
+            exit-code: '1'
+            ignore-unfixed: true
+            vuln-type: 'os,library'
+            severity: 'HIGH,CRITICAL'
 
 
       - name: Push Backend Image
@@ -135,7 +135,7 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'HIGH,CRITICAL'
-          
+
       - name: Push Frontend Image
         run: |
           docker push \
