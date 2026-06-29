@@ -16,7 +16,7 @@ spec:
     blueGreen:
       activeService: frontend-active
       previewService: frontend-preview
-      autoPromotionEnabled: false    
+      autoPromotionEnabled: true   
 
   template:
     metadata:
