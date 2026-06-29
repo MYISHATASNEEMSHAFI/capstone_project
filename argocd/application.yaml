@@ -8,3 +8,19 @@ spec:
     automated:
       prune: true
       selfHeal: true
+
+  spec:
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: frontend-active-service
+      namespace: staging
+      jsonPointers:
+        - /spec/selector
+
+    - group: ""
+      kind: Service
+      name: frontend-deployment
+      namespace: staging
+      jsonPointers:
+        - /spec/selector    
