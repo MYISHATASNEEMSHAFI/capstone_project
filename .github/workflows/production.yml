@@ -12,60 +12,79 @@ jobs:
 
     steps:
 
+      #################################################
+      # Checkout Repository
+      #################################################
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      ########################################################
-      # Read image tags from staging manifests
-      ########################################################
+      #################################################
+      # Install Kustomize
+      #################################################
+
+      - name: Install Kustomize
+        run: |
+          curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
+          sudo mv kustomize /usr/local/bin/
+
+      #################################################
+      # Read Backend Image
+      #################################################
 
       - name: Read Backend Image
         run: |
-              BACKEND_IMAGE=$(awk '/image:/{print $2; exit}' kubernetes/staging/backend-deployment.yaml)
+          BACKEND_IMAGE=$(kustomize build kubernetes/staging | awk '/image:/ {print $2; exit}')
 
-              if [ -z "$BACKEND_IMAGE" ]; then
-                echo "backend image not found!"
-                exit 1
-              fi
-              echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
-     
+          if [ -z "$BACKEND_IMAGE" ]; then
+            echo "Backend image not found!"
+            exit 1
+          fi
+
+          echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
+
+      #################################################
+      # Read Frontend Image
+      #################################################
+
       - name: Read Frontend Image
         run: |
-            FRONTEND_IMAGE=$(awk '/image:/{print $2; exit}' kubernetes/staging/frontend-deployment.yaml)
+          FRONTEND_IMAGE=$(kustomize build kubernetes/staging | awk '/capstone-frontend/ {print $2; exit}')
 
-            if [ -z "$FRONTEND_IMAGE" ]; then
-              echo "Frontend image not found!"
-              exit 1
-            fi
+          if [ -z "$FRONTEND_IMAGE" ]; then
+            echo "Frontend image not found!"
+            exit 1
+          fi
 
-            echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
-   
-      ########################################################
-      # Update production manifests
-      ########################################################
+          echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
 
-      - name: Update Backend Manifest
+      #################################################
+      # Update Production Kustomization
+      #################################################
+
+      - name: Update Production Images
         run: |
-          sed -i "s|image:.*|image: ${BACKEND_IMAGE}|g" kubernetes/production/backend-deployment.yaml
+          cd kubernetes/production
 
-      - name: Update Frontend Manifest
-        run: |
-          sed -i "s|image:.*|image: ${FRONTEND_IMAGE}|g" kubernetes/production/frontend-deployment.yaml
+          kustomize edit set image capstone-backend=$BACKEND_IMAGE
 
-      ########################################################
-      # Commit changes
-      ########################################################
+          kustomize edit set image capstone-frontend=$FRONTEND_IMAGE
+
+      #################################################
+      # Commit Changes
+      #################################################
 
       - name: Commit and Push
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git add kubernetes/production/backend-deployment.yaml
-          git add kubernetes/production/frontend-deployment.yaml
+          git add kubernetes/production/kustomization.yaml
 
-          git commit -m "Promote staging images to production" || echo "No changes"
+          git diff --cached --quiet && echo "Nothing to commit" && exit 0
 
-          git push
+          git commit -m "Promote staging images to production"
+
+          git push origin master
