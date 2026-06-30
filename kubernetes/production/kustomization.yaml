@@ -12,10 +12,12 @@ resources:
 - frontend-service.yaml
 - ingress.yaml
 
-
 images:
 - name: capstone-backend
   newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-backend
-  newTag: 6661eac8ba8abf1f1092495685bc2557dd79d357
+  newTag: <backend-tag>
+
 - name: capstone-frontend
-  newName: image
+  newName: 622488711452.dkr.ecr.us-east-2.amazonaws.com/capstone-frontend
+  newTag: <frontend-tag>
+
